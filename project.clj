@@ -8,6 +8,11 @@
             :distribution :repo
             :comments     "same as Clojure"}
 
+  :deploy-repositories [["clojars" {:url "https://clojars.org/repo"
+                                    :username :env/clojars_user
+                                    :password :env/clojars_pass
+                                    :sign-releases false}]]
+
   :warn-on-reflection true
 
   ; To run the examples:
