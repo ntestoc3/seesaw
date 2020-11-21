@@ -205,3 +205,13 @@
     (char? v)         (int (Character/toUpperCase ^Character v))
     :else             (int v)))
 
+(defn class-private-field
+  "get class private field"
+  [class-field]
+  (let [cls (-> (namespace class-field)
+                symbol
+                resolve)
+        field (name class-field)
+        m (.getDeclaredField cls field)]
+    (. m (setAccessible true))
+    (.get m nil)))

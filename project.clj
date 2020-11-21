@@ -26,6 +26,7 @@
                  [com.jgoodies/forms "1.3.0"]
                  [org.swinglabs.swingx/swingx-core "1.6.5-1"]
                  [j18n "1.0.2"]
+                 [com.fifesoft/autocomplete "3.1.0"]
                  [com.fifesoft/rsyntaxtextarea "3.1.1"]]
   :plugins [[lein-ancient "0.6.15"]
             [lein-cljfmt "0.6.4"]]

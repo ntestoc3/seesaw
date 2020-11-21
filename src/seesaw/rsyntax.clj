@@ -21,9 +21,58 @@
             clojure.string)
   (:import [org.fife.ui.rsyntaxtextarea
             AbstractTokenMakerFactory
+            RSyntaxTextAreaUI
             RSyntaxTextArea
-            Theme
-            ]))
+            Theme]
+           [org.fife.ui.rtextarea
+            RTextAreaUI
+            RTextScrollPane]
+           javax.swing.UIManager))
+
+;; helper functions
+(defn enable-templates!
+  [enabled]
+  (RSyntaxTextArea/setTemplatesEnabled enabled))
+
+(defn templates-enabled?
+  []
+  (RSyntaxTextArea/getTemplatesEnabled))
+
+(def rtextarea-keymap
+  (util/class-private-field 'RTextAreaUI/RTEXTAREA_KEYMAP_NAME))
+
+(def rtextarea-action-map
+  (util/class-private-field 'RTextAreaUI/SHARED_ACTION_MAP_NAME))
+
+(def rtextarea-input-map
+  (util/class-private-field 'RTextAreaUI/SHARED_INPUT_MAP_NAME))
+
+(def rsyntax-textarea-input-map
+  (util/class-private-field 'RSyntaxTextAreaUI/SHARED_INPUT_MAP_NAME))
+
+(def rsyntax-textarea-action-map
+  (util/class-private-field 'RSyntaxTextAreaUI/SHARED_ACTION_MAP_NAME))
+
+(defmacro with-rsyntax-input-action-map-context
+  [& body]
+  `(let [old-keymap# (javax.swing.text.JTextComponent/getKeymap rtextarea-keymap)
+         old-syntax-action# (UIManager/get rsyntax-textarea-action-map)
+         old-syntax-input# (UIManager/get rsyntax-textarea-input-map)
+         old-action# (UIManager/get rtextarea-action-map)
+         old-input# (UIManager/get rtextarea-input-map)]
+     (javax.swing.text.JTextComponent/removeKeymap rtextarea-keymap)
+     (UIManager/put rsyntax-textarea-action-map nil)
+     (UIManager/put rsyntax-textarea-input-map nil)
+     (UIManager/put rtextarea-action-map nil)
+     (UIManager/put rtextarea-input-map nil)
+     (try
+       ~@body
+       (finally
+         (javax.swing.text.JTextComponent/addKeymap rtextarea-keymap old-keymap#)
+         (UIManager/put rsyntax-textarea-action-map old-syntax-action#)
+         (UIManager/put rsyntax-textarea-input-map old-syntax-input#)
+         (UIManager/put rtextarea-action-map old-action#)
+         (UIManager/put rtextarea-input-map old-input#)))))
 
 ;;; Go through the available syntax highlighting modes,
 ;;; e.g. "text/clojure" and then for backwards compatibility map them to
@@ -119,7 +168,7 @@
 
     (options/bean-option :hyperlink-foreground RSyntaxTextArea)
     (options/bean-option :mark-occurrences-color RSyntaxTextArea)
-    (options/bean-option :matched-bracket-b-g-color RSyntaxTextArea)
+    (options/bean-option [:matched-bracket-bg-color :matched-bracket-b-g-color] RSyntaxTextArea)
     (options/bean-option :matched-bracket-border-color RSyntaxTextArea)
     (options/bean-option :use-selected-text-color RSyntaxTextArea)
     (options/bean-option :tab-line-color RSyntaxTextArea)
@@ -144,3 +193,36 @@
   "
   [& opts]
   (apply core/config! (RSyntaxTextArea.) opts))
+
+;;;;;;;;;;; RTextScrollPane
+(def text-scroll-options
+  (merge
+   core/scrollable-options
+   (options/option-map
+    (options/bean-option [:line-numbers? :line-numbers-enabled] RTextScrollPane)
+    (options/bean-option [:fold-indicator? :fold-indicator-enabled?] RTextScrollPane)
+    (options/bean-option [:icon-row-header? :icon-row-header-enabled?] RTextScrollPane))))
+
+(widget-options/widget-option-provider
+ RTextScrollPane
+ text-scroll-options)
+
+(defn text-scroll
+  "Wrap target in a RTextScrollPane and return the scroll pane.
+
+  The first argument is always the widget that should be scrolled. It's followed
+  by zero or more options *for the scroll pane*.
+
+  Additional Options:
+
+    :line-numbers? - Whether or not line numbers are visible.
+    :fold-indicator? - Whether the fold indicator is enabled.
+    :icon-row-header? -  Whether the icon row header (used for breakpoints, bookmarks, etc.) is enabled
+
+  See:
+    http://javadoc.fifesoft.com/rsyntaxtextarea/org/fife/ui/rtextarea/RTextScrollPane.html
+  "
+  [target & opts]
+  (let [^RTextScrollPane tsp (core/construct RTextScrollPane)]
+    (.setViewportView tsp (core/make-widget target))
+    (options/apply-options tsp opts)))
