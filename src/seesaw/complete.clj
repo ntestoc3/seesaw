@@ -55,7 +55,6 @@
     :or {activate-rules "abcdefghijklmnopqrstuvwxyz.:/-"
          ac-words []}
     :as opts}]
-  (println "default cp opts:" opts)
   (doto  (proxy [DefaultCompletionProvider] [(into-array String ac-words)]
            (isValidChar [^Character ch]
              (-> (or (Character/isLetterOrDigit ch)
