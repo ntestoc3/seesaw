@@ -17,7 +17,7 @@
             [seesaw.widget-options :as widget-options]
             clojure.reflect
             clojure.string)
-  (:import [org.fife.ui.rsyntaxtextarea AbstractTokenMakerFactory]))
+  (:import [org.fife.ui.rsyntaxtextarea RSyntaxTextArea AbstractTokenMakerFactory]))
 
 ;;; Go through the available syntax highlighting modes,
 ;;; e.g. "text/clojure" and then for backwards compatibility map them to
@@ -28,17 +28,28 @@
 
 (def text-area-options
   (merge
-    core/text-area-options
-    (options/option-map
-      (options/bean-option
-        [:syntax :syntax-editing-style]
-        org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
-        syntax-table
-        nil
-        (keys syntax-table)))))
+   core/text-area-options
+   (options/option-map
+    (options/bean-option
+     [:syntax :syntax-editing-style]
+     RSyntaxTextArea
+     syntax-table
+     nil
+     (keys syntax-table))
+
+    (options/bean-option [:anti-aliasing? :anti-aliasing-enabled] RSyntaxTextArea)
+    (options/bean-option [:highlight-current-line? :highlight-current-line] RSyntaxTextArea)
+    (options/bean-option :highlighter RSyntaxTextArea)
+    (options/bean-option [:auto-indent? :auto-indent-enabled?] RSyntaxTextArea)
+    (options/bean-option [:code-folding? :code-folding-enabled?] RSyntaxTextArea)
+    (options/bean-option [:margin-line? :margin-line-enabled?] RSyntaxTextArea)
+    (options/bean-option [:clear-whitespace-lines? :clear-whitespace-lines-enabled?] RSyntaxTextArea)
+    (options/bean-option [:bracket-matching? :bracket-matching-enabled?] RSyntaxTextArea)
+    (options/bean-option :whitespace-visible? RSyntaxTextArea)
+    (options/bean-option :tab-size RSyntaxTextArea))))
 
 (widget-options/widget-option-provider
-  org.fife.ui.rsyntaxtextarea.RSyntaxTextArea
+  RSyntaxTextArea
   text-area-options)
 
 (defn text-area
@@ -54,4 +65,4 @@
     http://javadoc.fifesoft.com/rsyntaxtextarea/
   "
   [& opts]
-  (apply core/config! (org.fife.ui.rsyntaxtextarea.RSyntaxTextArea.) opts))
+  (apply core/config! (RSyntaxTextArea.) opts))

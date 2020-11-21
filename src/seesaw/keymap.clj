@@ -43,6 +43,18 @@
 
 (def ^{:private true} default-scope (:descendants scope-table))
 
+(defn- add-action
+  [target act & {:keys [id] :as opts}]
+  (let [am     (.getActionMap target)
+        act    (to-action act)
+        id     (or id act)]
+    (.put am id act)
+    [id
+     (fn []
+       (.remove am id))]))
+
+(def action-id? string?)
+
 (defn map-key
   "Install a key mapping on a widget. 
   
@@ -93,21 +105,24 @@
     (map-key t \"control ENTER\"
       (fn [e] (alert e \"You pressed ctrl+enter!\")))
 
+    (map-key ta \"control P\" \"caret-up\")
   See:
     (seesaw.keystroke/keystroke)
     http://download.oracle.com/javase/tutorial/uiswing/misc/keybinding.html
   "
-  [target key act & {:keys [scope id] :as opts}]
+  [target key act-or-id & {:keys [scope id] :as opts}]
   (let [target (to-target (to-widget* target))
         scope  (scope-table scope default-scope)
         im     (.getInputMap target scope)
-        am     (.getActionMap target)
-        act    (to-action act)
-        id     (or id act)
         ks     (keystroke key)]
-    (.put im ks id)
-    (.put am id act)
-    (fn []
-      (.remove im ks)
-      (.remove am id))))
+    (if (action-id? act-or-id)
+      (do (.put im ks act-or-id)
+          (fn []
+            (.remove im ks)))
+      (let [[act-id act-rm-fn] (add-action target act-or-id opts)]
+        (.put im ks act-id)
+        (fn []
+          (.remove im ks)
+          (act-rm-fn))))))
+
 

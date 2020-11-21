@@ -1,4 +1,4 @@
-(defproject new-seesaw "0.1.1"
+(defproject ntestoc/seesaw "0.1.0"
   :description "A Swing wrapper/DSL for Clojure with virtual dom. You want seesaw.core, FYI. See http://seesaw-clj.org for more info."
 
   :url "http://seesaw-clj.org"
@@ -21,7 +21,7 @@
                  [com.jgoodies/forms "1.3.0"]
                  [org.swinglabs.swingx/swingx-core "1.6.5-1"]
                  [j18n "1.0.2"]
-                 [com.fifesoft/rsyntaxtextarea "3.0.3"]]
+                 [com.fifesoft/rsyntaxtextarea "3.1.1"]]
   :plugins [[lein-ancient "0.6.15"]
             [lein-cljfmt "0.6.4"]]
   :profiles {:dev {:dependencies [[com.stuartsierra/lazytest "1.1.2"]

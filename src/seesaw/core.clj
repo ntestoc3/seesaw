@@ -3483,17 +3483,6 @@
   (let [sl (construct javax.swing.JProgressBar)]
     (apply-options sl opts)))
 
-
-;*******************************************************************************
-; JFXPanel
-(widget-option-provider javafx.embed.swing.JFXPanel default-options)
-
-(defn jfxpanel
-  [& {:keys [] :as opts}]
-  (let [sl (construct javafx.embed.swing.JFXPanel)]
-    (apply-options sl opts)))
-
-
 ;*******************************************************************************
 ; Selectors
 
