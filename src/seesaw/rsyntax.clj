@@ -54,6 +54,8 @@
   (util/class-private-field 'RSyntaxTextAreaUI/SHARED_ACTION_MAP_NAME))
 
 (defmacro with-rsyntax-input-action-map-context
+  "fix loaded RSyntaxTextArea library multiple times input issue:
+  https://github.com/bobbylight/RSyntaxTextArea/issues/269"
   [& body]
   `(let [old-keymap# (javax.swing.text.JTextComponent/getKeymap rtextarea-keymap)
          old-syntax-action# (UIManager/get rsyntax-textarea-action-map)
