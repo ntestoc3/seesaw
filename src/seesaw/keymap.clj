@@ -44,7 +44,7 @@
 (def ^{:private true} default-scope (:descendants scope-table))
 
 (defn- add-action
-  [target act & {:keys [id] :as opts}]
+  [target act id]
   (let [am     (.getActionMap target)
         act    (to-action act)
         id     (or id act)]
@@ -119,7 +119,7 @@
       (do (.put im ks act-or-id)
           (fn []
             (.remove im ks)))
-      (let [[act-id act-rm-fn] (add-action target act-or-id opts)]
+      (let [[act-id act-rm-fn] (add-action target act-or-id id)]
         (.put im ks act-id)
         (fn []
           (.remove im ks)
