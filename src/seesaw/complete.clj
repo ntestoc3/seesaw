@@ -51,8 +51,10 @@
 (defn default-completion-provider
   [{:keys [activation-rules
            ac-words
+           any-letters
            completions]
     :or {activate-rules "abcdefghijklmnopqrstuvwxyz.:/-"
+         any-letters false
          ac-words []}
     :as opts}]
   (doto  (proxy [DefaultCompletionProvider] [(into-array String ac-words)]
@@ -60,7 +62,7 @@
              (-> (or (Character/isLetterOrDigit ch)
                      (#{\. \_ \' \/ \- \:} ch))
                  boolean)))
-    (.setAutoActivationRules true activation-rules)
+    (.setAutoActivationRules any-letters activation-rules)
     (add-provider-completions completions)))
 
 (def auto-complete-options
