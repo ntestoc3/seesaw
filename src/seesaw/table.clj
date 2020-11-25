@@ -242,6 +242,28 @@
       (apply update-at! target more))
     (update-at! target row value)))
 
+(defn add!
+  "Add one or more rows into a table. The arguments are one or more value
+  where value is either a map or a vector with the right number of columns.
+
+  Returns target.
+
+  Examples:
+
+    ; add a row at the end of the table
+    (add! 0 {:name \"Agent Cooper\" :likes \"Cherry pie and coffee\"})
+  "
+  ([target value]
+   (let [target  (to-table-model target)
+         col-key-map (get-column-key-map target)
+         ^objects row-values  (unpack-row col-key-map value)]
+     (.addRow target row-values))
+   target)
+  ([target value & more]
+   (add! target value)
+   (doseq [v more]
+     (add! target v))))
+
 (defn insert-at!
   "Inserts one or more rows into a table. The arguments are one or more row-index/value
   pairs where value is either a map or a vector with the right number of columns. Each
