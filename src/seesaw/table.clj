@@ -44,36 +44,44 @@
   (let [full-values (atom [])]
     (proxy [javax.swing.table.DefaultTableModel] [(object-array column-names) 0]
       (isCellEditable [row col] false)
+      
       (setRowCount [^Integer rows]
-        ; trick to force proxy-super macro to see correct type to avoid reflection.
-        (swap! full-values (fn [v]
-                             (if (< rows (count v))
-                               (subvec v rows)
-                               (vec (concat v (take (- (count v) rows) (constantly nil)))))))
-        (let [^javax.swing.table.DefaultTableModel this this]
-          (proxy-super setRowCount rows)))
+        ;; trick to force proxy-super macro to see correct type to avoid reflection.
+        (locking this
+          (let [^javax.swing.table.DefaultTableModel this this]
+            (proxy-super setRowCount rows))
+          (swap! full-values (fn [v]
+                               (if (< rows (count v))
+                                 (subvec v rows)
+                                 (vec (concat v (take (- (count v) rows) (constantly nil)))))))))
       (addRow [^objects values]
-        (swap! full-values conj (last values))
-        ; TODO reflection - I can't get rid of the reflection here without crashes
-        ; It has something to do with Object[] vs. Vector overrides.
-        (proxy-super addRow values))
+        ;; fix full-values insert twices
+        ;; https://github.com/frohoff/jdk8u-jdk/blob/master/src/share/classes/javax/swing/table/DefaultTableModel.java#L349
+        (.insertRow this (.getRowCount this) values))
       (insertRow [row ^objects values]
-        (swap! full-values insert-at row (last values))
-        ; TODO reflection - I can't get rid of the reflection here without crashes
-        ; It has something to do with Object[] vs. Vector overrides.
-        (proxy-super insertRow row values))
+        #_(when (not= (.getRowCount this) (count @full-values))
+          (println "insert row table row incorrect: "
+                   (.getRowCount this)
+                   " full-values:" (count @full-values)))
+        (locking this
+          ;; TODO reflection - I can't get rid of the reflection here without crashes
+          ;; It has something to do with Object[] vs. Vector overrides.
+          (proxy-super insertRow row values)
+          (swap! full-values insert-at row (last values))))
       (removeRow [row]
-        (swap! full-values remove-at row)
-        (let [^javax.swing.table.DefaultTableModel this this]
-          (proxy-super removeRow row)))
-      ; TODO this stuff is an awful hack and now that I'm wiser, I should fix it.
+        (locking this
+          (let [^javax.swing.table.DefaultTableModel this this]
+            (proxy-super removeRow row))
+          (swap! full-values remove-at row)))
+      ;; TODO this stuff is an awful hack and now that I'm wiser, I should fix it.
       (getValueAt [row col]
-        (if (= -1 row col)
-          column-key-map
-          (if (= -1 col)
-            (get @full-values row)
-            (let [^javax.swing.table.DefaultTableModel this this]
-              (proxy-super getValueAt row col)))))
+        (locking this
+          (if (= -1 row col)
+            column-key-map
+            (if (= -1 col)
+              (get @full-values row)
+              (let [^javax.swing.table.DefaultTableModel this this]
+                (proxy-super getValueAt row col))))))
       (setValueAt [value row col]
         (if (= -1 col)
           (swap! full-values assoc row value)
@@ -227,15 +235,17 @@
     (let [target      (to-table-model target)
           col-key-map (get-column-key-map target)
           ^objects row-values  (unpack-row col-key-map value)]
-      (doseq [i (range 0 (.getColumnCount target))]
-        ; TODO this precludes setting a cell to nil. Do we care?
-        (let [v (aget row-values i)]
-          (when-not (nil? v)
-            (.setValueAt target (aget row-values i) row i))))
-      ; merge with current full-map value so that extra fields aren't lost.
-      (.setValueAt target
-                   (merge (.getValueAt target row -1)
-                          (last row-values)) row -1))
+      (locking
+          target
+        (doseq [i (range 0 (.getColumnCount target))]
+          ;; TODO this precludes setting a cell to nil. Do we care?
+          (let [v (aget row-values i)]
+            (when-not (nil? v)
+              (.setValueAt target (aget row-values i) row i))))
+        ;; merge with current full-map value so that extra fields aren't lost.
+        (.setValueAt target
+                     (merge (.getValueAt target row -1)
+                            (last row-values)) row -1)))
     target)
   ([target row value & more]
     (when more
