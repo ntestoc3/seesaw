@@ -15,7 +15,7 @@
   (conj {:text  (get c :text ((fnil name c) (:key c)))
          :class (get c :class Object)}
         (if (map? c)
-          (select-keys c [:key :text :class])
+          (select-keys c [:key :text :class :editable])
           {:key c})))
 
 (defn- unpack-row-map [col-key-map row]
@@ -40,11 +40,13 @@
     (vec (concat head tail))))
 
 (defn- ^javax.swing.table.DefaultTableModel proxy-table-model
-  [column-names column-key-map column-classes]
+  [column-names column-key-map column-classes editable-columns]
   (let [full-values (atom [])]
     (proxy [javax.swing.table.DefaultTableModel] [(object-array column-names) 0]
-      (isCellEditable [row col] false)
-      
+      (isCellEditable [row col]
+        (if (editable-columns col)
+          true
+          false))
       (setRowCount [^Integer rows]
         ;; trick to force proxy-super macro to see correct type to avoid reflection.
         (locking this
@@ -60,9 +62,9 @@
         (.insertRow this (.getRowCount this) values))
       (insertRow [row ^objects values]
         #_(when (not= (.getRowCount this) (count @full-values))
-          (println "insert row table row incorrect: "
-                   (.getRowCount this)
-                   " full-values:" (count @full-values)))
+            (println "insert row table row incorrect: "
+                     (.getRowCount this)
+                     " full-values:" (count @full-values)))
         (locking this
           ;; TODO reflection - I can't get rid of the reflection here without crashes
           ;; It has something to do with Object[] vs. Vector overrides.
@@ -114,8 +116,10 @@
 
     :columns - a list of keys, or maps. If a key, then (name key) is used as the 
                column name. If a map, it can be in the form 
-               {:key key :text text :class class} where key is use to index the 
-               row data, text (optional) is used as the column name, and 
+               {:key key :text text :class class :editable bool}
+               where key is use to index the row data,
+               text (optional) is used as the column name,
+               editable (optional) is used to specify the column is editable and 
                class (optional) specifies the object class of the column data
                returned by getColumnClass. The order establishes the order of the
                columns in the table.
@@ -144,7 +148,11 @@
         col-names   (map :text norm-cols)
         col-classes (map :class norm-cols)
         col-key-map (reduce (fn [m [k v]] (assoc m k v)) {} (map-indexed #(vector (:key %2) %1) norm-cols))
-        model (proxy-table-model col-names col-key-map col-classes)]
+        editable-cols (->> (filter :editable norm-cols)
+                           (map :key)
+                           (map col-key-map)
+                           set)
+        model (proxy-table-model col-names col-key-map col-classes editable-cols)]
     (doseq [row rows]
       (.addRow model ^objects (unpack-row col-key-map row)))
     model))
