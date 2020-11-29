@@ -1,4 +1,4 @@
-(defproject ntestoc/seesaw "0.1.5"
+(defproject ntestoc/seesaw "0.1.6"
   :description "A Swing wrapper/DSL for Clojure with virtual dom. You want seesaw.core, FYI. See http://seesaw-clj.org for more info."
 
   :url "http://seesaw-clj.org"
