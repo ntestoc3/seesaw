@@ -39,7 +39,6 @@
     :else (illegal-argument "row must be a map or vector, got %s" (type row))))
 
 (defn- insert-at [row-vec pos item]
-  (println "insert-at:" pos "value:" item)
   (fv/catvec (fv/subvec row-vec 0 pos) [item] (fv/subvec row-vec pos)))
 
 (defn- remove-at [row-vec pos]
@@ -82,11 +81,12 @@
               col-key (get-col-key column)]
           (get row-info col-key)))
       (setValueAt​ [value row column]
-        (let [col-key (get-col-key column)
-              new-info (-> (nth @full-values row)
-                           (assoc col-key value))]
-          (swap! full-values assoc row new-info)
-          (proxy-super fireTableCellUpdated​ row column)))
+        (locking this
+          (let [col-key (get-col-key column)
+                new-info (-> (nth @full-values row)
+                             (assoc col-key value))]
+            (swap! full-values assoc row new-info)
+            (proxy-super fireTableCellUpdated​ row column))))
 
 	    (isCellEditable​ [row column]
         (:editable (nth columns-info column)))
@@ -105,42 +105,48 @@
              ffirst))
 
       (setRowCount [rows]
-        (let [old-count (count @full-values)]
-          (cond
-            (= rows old-count)
-            nil
+        (locking this
+          (let [old-count (count @full-values)]
+            (cond
+              (= rows old-count)
+              nil
 
-            (< rows old-count)
-            (do (swap! full-values #(fv/subvec %1 0 rows))
-                (proxy-super fireTableRowsDeleted rows (dec old-count)))
+              (< rows old-count)
+              (do (swap! full-values #(fv/subvec %1 0 rows))
+                  (proxy-super fireTableRowsDeleted rows (dec old-count)))
 
-            :else
-            (do (swap! full-values #(fv/catvec %1
-                                               (fv/vec (repeat (- rows old-count)
-                                                               nil))))
-                (proxy-super fireTableRowsInserted old-count (dec rows))))))
+              :else
+              (do (swap! full-values #(fv/catvec %1
+                                                 (fv/vec (repeat (- rows old-count)
+                                                                 nil))))
+                  (proxy-super fireTableRowsInserted old-count (dec rows)))))))
 
       (addRow [row-data]
-        (->> (normalize-row columns-info row-data)
-             (swap! full-values conj))
-        (let [rows (count @full-values)]
-          (proxy-super fireTableRowsInserted rows rows)))
+        ;; 加锁防止并发执行数据插入，TableRowSorter检查数据长度不一致引发异常
+        (locking this
+          (->> (normalize-row columns-info row-data)
+               (swap! full-values conj))
+          (let [last-row (dec (count @full-values))]
+            (proxy-super fireTableRowsInserted last-row last-row))))
 
       (insertRow [row row-data]
-        (->> (normalize-row columns-info row-data)
-             (swap! full-values insert-at row))
-        (proxy-super fireTableRowsInserted row row))
+        (locking this
+          (->> (normalize-row columns-info row-data)
+               (swap! full-values insert-at row))
+          (proxy-super fireTableRowsInserted row row)))
 
 
       (updateRow [row row-data]
-        (let [new-info (-> (nth @full-values row)
-                           (merge (normalize-row columns-info row-data)))]
-          (swap! full-values assoc row new-info)
-          (proxy-super fireTableRowsUpdated row row)))
+        (locking this
+          (let [new-info (-> (nth @full-values row)
+                             (merge (normalize-row columns-info row-data)))]
+            (swap! full-values assoc row new-info)
+            (proxy-super fireTableRowsUpdated row row))))
 
       (removeRow [row]
-        (swap! full-values remove-at row)
-        (proxy-super fireTableRowsDeleted row row))
+        (locking this
+          (swap! full-values remove-at row)
+          (proxy-super fireTableRowsDeleted row row)))
 
       (getColumnInfo []
         columns-info)
