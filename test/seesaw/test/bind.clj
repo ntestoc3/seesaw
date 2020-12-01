@@ -2,169 +2,169 @@
   (:refer-clojure :exclude [some filter])
   (:require [seesaw.core :as ssc])
   (:use seesaw.bind)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe bind
-  (it "returns a composite bindable"
+(deftest bind-test
+  (testing "returns a composite bindable"
     (let [a (atom 0) b (atom 1) c (atom 2) d (atom 3)
           cb (bind a b c d)
           called (atom nil) ]
-      (expect (satisfies? Bindable cb))
+      (is (satisfies? Bindable cb))
 
       ; make sure that subscribing to the composite subscribes
       ; to the *end* of the chain!
       (subscribe cb (fn [v] (reset! called v)))
       (reset! d 10)
-      (expect (= 10 @called))))
+      (is (= 10 @called))))
 
-  (it "can chain bindables together"
+  (testing "can chain bindables together"
     (let [a (atom 1)
           b (atom nil)]
       (bind a (transform + 5) b)
       (reset! a 5)
-      (expect (= 10 @b))))
+      (is (= 10 @b))))
 
-  (it "returns something function-like that can be called to undo the binding"
+  (testing "returns something function-like that can be called to undo the binding"
     (let [a (atom 0) b (atom 1) c (atom 2)
           cb (bind a b c)]
       (reset! a 5)
-      (expect (= [5 5 5] [@a @b @c]))
+      (is (= [5 5 5] [@a @b @c]))
       (cb)
       (reset! a 6)
-      (expect (= [6 5 5] [@a @b @c]))))
+      (is (= [6 5 5] [@a @b @c]))))
   
-  (it "can chain bindables, including composites, together"
+  (testing "can chain bindables, including composites, together"
     (let [a (atom 1)
           b (atom nil)]
       (bind a (bind (transform + 5) (transform * 2) (atom nil)) b)
       (reset! a 2)
-      (expect (= 14 @b))))
+      (is (= 14 @b))))
 
-  (it "should sync the enabled? property of a widget with an atom"
+  (testing "should sync the enabled? property of a widget with an atom"
     (let [v (atom true)
           b (ssc/button)]
       (bind (property b :enabled?) v)
       (ssc/config! b :enabled? false)
-      (expect (not @v))
+      (is (not @v))
       (reset! v true)))
 
-  (it "should sync the enabled? property of a widget with an atom"
+  (testing "should sync the enabled? property of a widget with an atom"
     (let [v (atom true)
           b (ssc/button)]
       (bind (property b :enabled?) v)
       (ssc/config! b :enabled? false)
-      (expect (not @v))))
+      (is (not @v))))
 
-  (it "should sync an atom to the enabled? property of a widget"
+  (testing "should sync an atom to the enabled? property of a widget"
     (let [v (atom true)
           b (ssc/button)]
       (bind v (property b :enabled?))
       (reset! v false)
-      (expect (not (.isEnabled b)))))
+      (is (not (.isEnabled b)))))
 
   (testing "with a BoundedRangeModel"
-    (it "Updates an atom when the model changes"
+    (testing "Updates an atom when the model changes"
       (let [a (atom -1)
             m (javax.swing.DefaultBoundedRangeModel. 50 0 2 100)]
         (bind m a)
         (.setValue m 51)
-        (expect (= 51 @a))))
-    (it "Updates the model when the atom changes"
+        (is (= 51 @a))))
+    (testing "Updates the model when the atom changes"
       (let [a (atom -1)
             m (javax.swing.DefaultBoundedRangeModel. 50 0 2 100)]
         (bind a m)
         (reset! a 99)
-        (expect (= 99 (.getValue m))))))
+        (is (= 99 (.getValue m))))))
 
   (testing "given a text field"
-    (it "should update an atom when the underlying document changes"
+    (testing "should update an atom when the underlying document changes"
       (let [a (atom nil)
             t (ssc/text "initial")]
         (bind (.getDocument t) a)
         (ssc/text! t "foo")
-        (expect (= "foo" @a))))
+        (is (= "foo" @a))))
 
-    (it "should update the underlying document when the atom changes"
+    (testing "should update the underlying document when the atom changes"
       (let [a (atom "initial")
             t (ssc/text "")]
         (bind a (.getDocument t))
         (reset! a "foo")
-        (expect (= "foo" (ssc/text t))))))
+        (is (= "foo" (ssc/text t))))))
 
   (testing "given a slider"
-    (it "should sync the value of the atom with the slider value, if slider value changed"
+    (testing "should sync the value of the atom with the slider value, if slider value changed"
       (let [v (atom 15)
             sl (ssc/slider :value @v)]
         (bind (.getModel sl) v)
         (.setValue sl 20)
-        (expect (= @v 20))))
-    (it "should sync the value of the slider with the atom value, if atom value changed"
+        (is (= @v 20))))
+    (testing "should sync the value of the slider with the atom value, if atom value changed"
       (let [v (atom 15)
             sl (ssc/slider :value @v)]
         (bind v (.getModel sl))
         (reset! v 20)
-        (expect (= (.getValue sl) 20)))))
+        (is (= (.getValue sl) 20)))))
  
   (testing "given a toggle button (or any button/menu)"
-    (it "should sync the selection state of the button"
+    (testing "should sync the selection state of the button"
       (let [v (atom nil)
             b (ssc/toggle :selected? false)]
         (bind b v)
         (.setSelected b true)
-        (expect @v)))
+        (is @v)))
 
-    (it "should sync the selection state of the button"
+    (testing "should sync the selection state of the button"
       (let [v (atom nil)
             b (ssc/toggle :selected? false)]
         (bind v b)
         (reset! v true)
-        (expect (.isSelected b)))))
+        (is (.isSelected b)))))
 
   (testing "given a combobox"
-    (it "should sync the selection state of the combobox"
+    (testing "should sync the selection state of the combobox"
       (let [v (atom nil)
             b (ssc/combobox :model [1 2 3 4])]
         (bind b v)
         (ssc/selection! b 2)
-        (expect (= 2 @v))))
+        (is (= 2 @v))))
 
-    (it "should sync the selection state of the combobox"
+    (testing "should sync the selection state of the combobox"
       (let [v (atom nil)
             b (ssc/combobox :model [1 2 3 4])]
         (bind v b)
         (reset! v 4)
-        (expect (= 4 (ssc/selection b))))))
+        (is (= 4 (ssc/selection b))))))
 
   (testing "given a spinner"
-    (it "should sync the value of the atom with the spinner value, if spinner value changed"
+    (testing "should sync the value of the atom with the spinner value, if spinner value changed"
       (let [v (atom 15)
             sl (ssc/spinner :model @v)]
         (bind (.getModel sl) v)
         (.setValue sl 20)
-        (expect (= @v 20))))
-    (it "should sync the value of the spinner with the atom value, if atom value changed"
+        (is (= @v 20))))
+    (testing "should sync the value of the spinner with the atom value, if atom value changed"
       (let [v (atom 15)
             sl (ssc/spinner :model @v)]
         (bind v (.getModel sl))
         (reset! v 20)
-        (expect (= (.getValue sl) 20)))))
+        (is (= (.getValue sl) 20)))))
 
   (testing "given an agent"
 
-    (it "should pass along changes to the agent's value"
+    (testing "should pass along changes to the agent's value"
       (let [start (agent nil)
             end   (atom nil)]
         (bind start end)
         (send start (constantly :called))
         (await start)
-        (expect (= :called @start))
-        (expect (= :called @end))))
+        (is (= :called @start))
+        (is (= :called @end))))
 
-    (it "should throw an exception if you try to notify an agent"
+    (testing "should throw an exception if you try to notify an agent"
       (let [start (atom nil)]
         (bind start (agent nil))
-        (expect (try
+        (is (try
                   (reset! start 99)
                   false
                   ; In Clojure 1.3, the exception propagates correctly
@@ -175,126 +175,126 @@
                     (= IllegalStateException (class (.getCause e)))))))))
 
   (testing "given a Ref"
-    (it "should pass along changes to the ref's value"
+    (testing "should pass along changes to the ref's value"
       (let [start (ref nil)
             end   (atom nil)]
         (bind start end)
         (dosync
          (alter start (constantly "foo")))
-        (expect (= "foo" @start))
-        (expect (= "foo" @end))))
-    (it "should pass update the ref's value when the source changes"
+        (is (= "foo" @start))
+        (is (= "foo" @end))))
+    (testing "should pass update the ref's value when the source changes"
       (let [start (atom nil)
             end   (ref nil)]
         (bind start end)
         (reset! start "foo")
-        (expect (= "foo" @start))
-        (expect (= "foo" @end)))))        )
+        (is (= "foo" @start))
+        (is (= "foo" @end)))))        )
 
-(describe b-do*
-  (it "executes a function with a single argument and ends a chain"
+(deftest b-do*-test
+  (testing "executes a function with a single argument and ends a chain"
     (let [start (atom 0)
           called (atom nil) ]
       (bind start (b-do* #(reset! called %)))
       (reset! start 5)
-      (expect (= 5 @called)))))
+      (is (= 5 @called)))))
 
-(describe b-do
-  (it "executes body with a single argument and ends a chain"
+(deftest b-do-test
+  (testing "executes body with a single argument and ends a chain"
     (let [start (atom [1 2])
           called (atom nil)]
       (bind start (b-do [[a b]] (reset! called (+ a b))))
       (reset! start [3 4])
-      (expect (= 7 @called)))))
+      (is (= 7 @called)))))
 
-(describe tee
-  (it "creates a tee junction in a bind"
+(deftest tee-test
+  (testing "creates a tee junction in a bind"
     (let [start (atom 0)
           end1  (atom 0)
           end2  (atom 0)]
       (bind start (tee (bind (transform * 2) end1)
                        (bind (transform * 4) end2)))
       (reset! start 5)
-      (expect (= 10 @end1))
-      (expect (= 20 @end2)))))
+      (is (= 10 @end1))
+      (is (= 20 @end2)))))
 
-(describe funnel
-  (it "create a funnel in a bind which listens to multiple source and produces a vector of values"
+(deftest funnel-test
+  (testing "create a funnel in a bind which listens to multiple source and produces a vector of values"
     (let [a (atom 0)
           b (atom 1)
           f (funnel a b)
           end (atom nil)]
       (bind f end)
       (reset! a 5)
-      (expect (= [5 nil] @end))
+      (is (= [5 nil] @end))
       (reset! b 6)
-      (expect (= [5 6] @end)))))
+      (is (= [5 6] @end)))))
 
-(describe filter 
-  (it "doesn't pass along value when predicate returns falsey"
+(deftest filter-test
+  (testing "doesn't pass along value when predicate returns falsey"
     (let [start (atom :foo)
           end   (atom :bar)]
       (bind start (filter (constantly false)) end)
       (reset! start :something)
-      (expect (= :bar @end))))
-  (it "passes along value when predicate returns truthy"
+      (is (= :bar @end))))
+  (testing "passes along value when predicate returns truthy"
     (let [start (atom :foo)
           end   (atom :bar)]
       (bind start (filter (constantly true)) end)
       (reset! start :something)
-      (expect (= :something @end)))))
+      (is (= :something @end)))))
 
-(describe some
-  (it "doesn't pass along falsey values returned by the predicate"
+(deftest some-test
+  (testing "doesn't pass along falsey values returned by the predicate"
     (let [start (atom :foo)
           end   (atom :bar)]
       (bind start (some (constantly nil)) end)
       (reset! start :something)
-      (expect (= :bar @end))))
-  (it "passes along result of predicate when it returns truthy"
+      (is (= :bar @end))))
+  (testing "passes along result of predicate when it returns truthy"
     (let [start (atom :foo)
           end   (atom :bar)]
       (bind start (some (constantly :yum)) end)
       (reset! start :something)
-      (expect (= :yum @end)))))
+      (is (= :yum @end)))))
 
-(describe selection
-  (it "sends out selection changes on a widget"
+(deftest selection-test
+  (testing "sends out selection changes on a widget"
     (let [lb (ssc/listbox :model [:a :b :c])
           output (atom nil)]
       (bind (selection lb) output)
       (ssc/selection! lb :b)
-      (expect (= :b @output))))
-  (it "maps its input to the selection of a widget"
+      (is (= :b @output))))
+  (testing "maps its input to the selection of a widget"
     (let [input (atom nil)
           lb (ssc/listbox :model [:a :b :c])]
       (bind input (selection lb))
       (reset! input :b)
-      (expect (= :b (ssc/selection lb))))))
+      (is (= :b (ssc/selection lb))))))
 
-(describe value 
-  (it "maps its input to the value of a widget"
+(deftest value-test
+  (testing "maps its input to the value of a widget"
     (let [input (atom nil)
           lb (ssc/listbox :id :lb :model [:a :b :c])
           tb (ssc/text :id :text)
           p  (ssc/border-panel :north lb :center tb)]
       (bind input (value p))
       (reset! input {:lb :b :text "hi"})
-      (expect (= {:lb :b :text "hi"} (ssc/value p))))))
+      (is (= {:lb :b :text "hi"} (ssc/value p))))))
 
-(describe to-bindable
-  (it "returns arg if it's already bindable"
+(deftest to-bindable-test
+  (testing "returns arg if it's already bindable"
     (let [a (atom nil)]
-      (expect (= a (to-bindable a)))))
-  (it "converts a text component to its document"
+      (is (= a (to-bindable a)))))
+  (testing "converts a text component to its document"
     (let [t (ssc/text)]
-      (expect (= (.getDocument t) (to-bindable t)))))
-  (it "converts a slider to its model"
+      (is (= (.getDocument t) (to-bindable t)))))
+  (testing "converts a slider to its model"
     (let [s (ssc/slider)]
-      (expect (= (.getModel s) (to-bindable s))))))
+      (is (= (.getModel s) (to-bindable s))))))
 
-(describe b-swap!
-  (it "acts like swap! passing the old value, new value, and additional args to a function"
+(deftest b-swap!-test
+  (testing "acts like swap! passing the old value, new value, and additional args to a function"
     (let [start (atom nil)
           target (atom [])
           end (atom nil)]
@@ -304,11 +304,11 @@
       (reset! start 1)
       (reset! start 2)
       (reset! start 3)
-      (expect (= [1 2 3] @target))
-      (expect (= @end @target)))))
+      (is (= [1 2 3] @target))
+      (is (= @end @target)))))
 
-(describe b-send
-  (it "acts like send passing the old value, new value, and additional args to a function"
+(deftest b-send-test
+  (testing "acts like send passing the old value, new value, and additional args to a function"
     (let [start  (atom nil)
           target (agent [])]
       (bind start 
@@ -317,10 +317,10 @@
       (reset! start 2)
       (reset! start 3)
       (await target)
-      (expect (= [1 2 3] @target)))))
+      (is (= [1 2 3] @target)))))
 
-(describe b-send-off
-  (it "acts like sendoff passing the old value, new value, and additional args to a function"
+(deftest b-send-off-test
+  (testing "acts like sendoff passing the old value, new value, and additional args to a function"
     (let [start  (atom nil)
           target (agent [])]
       (bind start 
@@ -329,10 +329,10 @@
       (reset! start 2)
       (reset! start 3)
       (await target)
-      (expect (= [1 2 3] @target)))))
+      (is (= [1 2 3] @target)))))
 
-(describe notify-later
-  (it "passes incoming values to the swing thread with invoke-later"
+(deftest notify-later-test
+  (testing "passes incoming values to the swing thread with invoke-later"
     (let [start (atom nil)
           end   (atom nil)
           p     (promise)]
@@ -342,11 +342,11 @@
             end)
       (subscribe end (fn [v] (deliver p :got-it)))
       (reset! start 99)
-      (expect (= :got-it @p))
-      (expect (= {:value 99 :edt? true} @end)))))
+      (is (= :got-it @p))
+      (is (= {:value 99 :edt? true} @end)))))
 
-(describe notify-soon
-  (it "passes incoming values to the swing thread with invoke-soon"
+(deftest notify-soon-test
+  (testing "passes incoming values to the swing thread with invoke-soon"
     (let [start (atom nil)
           end   (atom nil)]
       (bind start
@@ -354,10 +354,10 @@
             (transform (fn [v] {:value v :edt? (javax.swing.SwingUtilities/isEventDispatchThread)}))
             end)
       (ssc/invoke-now (reset! start 99))
-      (expect (= {:value 99 :edt? true} @end)))))
+      (is (= {:value 99 :edt? true} @end)))))
 
-(describe notify-now
-  (it "passes incoming values to the swing thread with invoke-now"
+(deftest notify-now-test
+  (testing "passes incoming values to the swing thread with invoke-now"
     (let [start (atom nil)
           end   (atom nil)]
       (bind start
@@ -365,108 +365,108 @@
             (transform (fn [v] {:value v :edt? (javax.swing.SwingUtilities/isEventDispatchThread)}))
             end)
       (reset! start 99)
-      (expect (= {:value 99 :edt? true} @end)))))
+      (is (= {:value 99 :edt? true} @end)))))
 
-(describe subscribe
+(deftest subscribe-test
   (testing "on an atom"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls (atom 0)
             target (atom "hi")
             unsubscribe (subscribe target (fn [_] (swap! calls inc)))]
         (reset! target "a")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsubscribe)
         (reset! target "b")
-        (expect (= 1 @calls)))))
+        (is (= 1 @calls)))))
 
   (testing "on an agent"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls (atom 0)
             target (agent "hi")
             unsubscribe (subscribe target (fn [_] (swap! calls inc)))]
         (await (send target (fn [_] "a")))
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsubscribe)
         (await (send target (fn [_] "b")))
-        (expect (= 1 @calls)))))
+        (is (= 1 @calls)))))
   
   (testing "on a javax.swing.text.Document"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls (atom 0)
             target (.getDocument (ssc/text))
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (.insertString target 0 "hi" nil)
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (.insertString target 0 "bye" nil)
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         )))
   (testing "on a javax.swing.BoundedRangeModel"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls (atom 0)
             target (javax.swing.DefaultBoundedRangeModel. 50 0 2 100)
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (.setValue target 1)
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (.setValue target 2)
-        (expect (= 1 @calls)))))
+        (is (= 1 @calls)))))
   
   (testing "on a funnel"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls  (atom 0)
             a      (atom "hi")
             target (funnel a)
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (reset! a "bye")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (reset! a "hi")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         )))
   
   (testing "on a widget property"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls  (atom 0)
             w      (ssc/text)
             target (property w :enabled?)
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (.setEnabled w false)
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (.setEnabled w true)
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         )))
   (testing "on a transform"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls  (atom 0)
             target (transform identity)
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (notify target "hi")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (notify target "bye")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         )))
   (testing "on a filter"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls  (atom 0)
             target (filter (constantly true))
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (notify target "hi")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (notify target "bye")
-        (expect (= 1 @calls)))))
+        (is (= 1 @calls)))))
   (testing "on a some"
-    (it "should return a function that unsubscribes"
+    (testing "should return a function that unsubscribes"
       (let [calls  (atom 0)
             target (some (constantly true))
             unsub  (subscribe target (fn [_] (swap! calls inc)))]
         (notify target "hi")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         (unsub)
         (notify target "bye")
-        (expect (= 1 @calls))
+        (is (= 1 @calls))
         ))))
 

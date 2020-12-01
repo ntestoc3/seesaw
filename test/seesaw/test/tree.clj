@@ -11,8 +11,8 @@
 (ns seesaw.test.tree
   (:use seesaw.tree)
   (:use [seesaw.core :only [listen]])
-  (:use [lazytest.describe :only (describe it testing given)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
 (defn- tree-listener
   "Dummy TreeModelListener that calls handler with the received event."
@@ -23,30 +23,30 @@
     (treeNodesRemoved [this e] (handler e))
     (treeStructureChanged [this e] (handler e))))
 
-(describe simple-tree-model
-  (given [branch? (fn [node] (= node "dir"))
+(deftest simple-tree-model-test
+  (let [branch? (fn [node] (= node "dir"))
         children (fn [node] (when (= node "dir") [1 2 3]))
         m (simple-tree-model branch? children "dir")]
-    (it "should create a read-only tree model from branch? and children functions"
+    (testing "should create a read-only tree model from branch? and children functions"
       (instance? javax.swing.tree.TreeModel m))
-    (it "should return the root"
+    (testing "should return the root"
       (= "dir" (.getRoot m)))
-    (it "should return isLeaf"
-      (expect (.isLeaf m "file"))
-      (expect (not (.isLeaf m "dir"))))
-    (it "should return the child count"
-      (expect (= 0 (.getChildCount m "file")))
-      (expect (= 3 (.getChildCount m "dir"))))
-    (it "should return a child by index"
+    (testing "should return isLeaf"
+      (is (.isLeaf m "file"))
+      (is (not (.isLeaf m "dir"))))
+    (testing "should return the child count"
+      (is (= 0 (.getChildCount m "file")))
+      (is (= 3 (.getChildCount m "dir"))))
+    (testing "should return a child by index"
       (= [1 2 3] (map #(.getChild m "dir" %) (range 3))))
-    (it "should retrieve the index of a child"
+    (testing "should retrieve the index of a child"
       (= [0 1 2] (map #(.getIndexOfChild m "dir" %) [1 2 3])))
-    (it "should allow a listener to be added"
+    (testing "should allow a listener to be added"
       (let [called (atom nil)]
         (.addTreeModelListener m (tree-listener #(reset! called %)))
         (node-changed m [(.getRoot m)])
-        (expect @called)))
-    (it "should allow a listener to be removed"
+        (is @called)))
+    (testing "should allow a listener to be removed"
       (let [called-a (atom nil)
             called-b (atom nil)
             listener-a (tree-listener #(reset! called-a %))
@@ -55,63 +55,63 @@
         (.addTreeModelListener m listener-b)
         (.removeTreeModelListener m listener-a)
         (node-changed m [(.getRoot m)])
-        (expect (not @called-a))
-        (expect @called-b)))))
+        (is (not @called-a))
+        (is @called-b)))))
 
 (defn- make-test-model []
   (simple-tree-model #(.isDirectory %) #(.listFiles %) (java.io.File. ".")))
 
-(describe fire-event
-  (it "fires nodes-changed events"
+(deftest fire-event-test
+  (testing "fires nodes-changed events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-changed #(reset! e %))
       (nodes-changed m [root] (map #(.getChild m root %) (range 4)))
-      (expect (not (nil? @e)))))
-  (it "fires node-changed events"
+      (is (not (nil? @e)))))
+  (testing "fires node-changed events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-changed #(reset! e %))
       (node-changed m [root])
-      (expect (not (nil? @e)))))
-  (it "fires nodes-inserted events"
+      (is (not (nil? @e)))))
+  (testing "fires nodes-inserted events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-inserted #(reset! e %))
       (nodes-inserted m [root] (map #(.getChild m root %) (range 4)))
-      (expect (not (nil? @e)))))
-  (it "fires node-inserted events"
+      (is (not (nil? @e)))))
+  (testing "fires node-inserted events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-inserted #(reset! e %))
       (node-inserted m [root])
-      (expect (not (nil? @e)))))
+      (is (not (nil? @e)))))
 
-  (it "fires node-structure-changed events"
+  (testing "fires node-structure-changed events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-structure-changed #(reset! e %))
       (node-structure-changed m [root])
-      (expect (not (nil? @e)))))
+      (is (not (nil? @e)))))
 
-  (it "fires nodes-removed events"
+  (testing "fires nodes-removed events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-removed #(reset! e %))
       (nodes-removed m [root] (range 1 4) (map #(.getChild m root %) (range 1 4)))
-      (expect (not (nil? @e)))))
+      (is (not (nil? @e)))))
 
-  (it "fires node-removed events"
+  (testing "fires node-removed events"
     (let [m (make-test-model)
           e (atom nil)
           root (.getRoot m)]
       (listen m :tree-nodes-removed #(reset! e %))
       (node-removed m [root] 2 (.getChild m root 2))
-      (expect (not (nil? @e))))))
+      (is (not (nil? @e))))))
 

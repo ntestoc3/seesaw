@@ -10,23 +10,23 @@
 
 (ns seesaw.test.timer
   (:use seesaw.timer)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)])
+  (:use clojure.test
+        )
   (:import [javax.swing Action]))
 
-(describe timer
-  (it "Creates a timer for a handler function and calls it"
+(deftest timer-test
+  (testing "Creates a timer for a handler function and calls it"
     (let [called (atom nil)
           t (timer #(inc (reset! called %)) :start? false :initial-value 99)]
       (.actionPerformed (first (.getActionListeners t)) nil)
-      (expect (= 99 @called))
+      (is (= 99 @called))
       (.actionPerformed (first (.getActionListeners t)) nil)
-      (expect (= 100 @called))))
+      (is (= 100 @called))))
 
-  (it "Sets timer properties"
+  (testing "Sets timer properties"
     (let [t (timer identity :start? false :initial-delay 123 :delay 456 :repeats? false)]
-      (expect (= 123 (.getInitialDelay t)))
-      (expect (= 456 (.getDelay t)))
-      (expect (not (.isRunning t)))
-      (expect (not (.isRepeats t))))))
+      (is (= 123 (.getInitialDelay t)))
+      (is (= 456 (.getDelay t)))
+      (is (not (.isRunning t)))
+      (is (not (.isRepeats t))))))
 

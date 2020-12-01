@@ -11,15 +11,15 @@
 (ns seesaw.test.behave
   (:use seesaw.behave)
   (:use seesaw.core)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe when-focused-select-all
-  (it "causes all text in a text field to be selected when it gains focus"
+(deftest when-focused-select-all-test
+  (testing "causes all text in a text field to be selected when it gains focus"
     (let [t (text "Hi there")
           remove-fn (when-focused-select-all t)]
       ; Simulate focus gained :(
       (doseq [l (.getFocusListeners t)]
         (.focusGained l (java.awt.event.FocusEvent. t java.awt.event.FocusEvent/FOCUS_GAINED)))
-      (expect (= "Hi there" (.getSelectedText t))))))
+      (is (= "Hi there" (.getSelectedText t))))))
 

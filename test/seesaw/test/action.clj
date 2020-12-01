@@ -12,74 +12,74 @@
   (:use [seesaw.action]
         [seesaw.core :only [config]]
         [seesaw.keystroke :only [keystroke]])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)])
+  (:use clojure.test
+        )
   (:import [javax.swing Action]))
 
-(describe action
-  (it "sets the name, tooltip, and command"
+(deftest action-test
+  (testing "sets the name, tooltip, and command"
     (let [a (action :name "Test" :tip "This is a tip" :command "Go!")]
-      (expect (instance? Action a))
-      (expect (.isEnabled a))
-      (expect (= "Test" (.getValue a Action/NAME)))
-      (expect (= "Go!" (.getValue a Action/ACTION_COMMAND_KEY)))
-      (expect (not (.getValue a Action/SELECTED_KEY)))
-      (expect (= "This is a tip" (.getValue a Action/SHORT_DESCRIPTION)))))
-  (it "sets the mnemonic of the action given an integer key code"
+      (is (instance? Action a))
+      (is (.isEnabled a))
+      (is (= "Test" (.getValue a Action/NAME)))
+      (is (= "Go!" (.getValue a Action/ACTION_COMMAND_KEY)))
+      (is (not (.getValue a Action/SELECTED_KEY)))
+      (is (= "This is a tip" (.getValue a Action/SHORT_DESCRIPTION)))))
+  (testing "sets the mnemonic of the action given an integer key code"
     (let [m (.getValue (action :mnemonic 99) Action/MNEMONIC_KEY)] 
       ; For Clojure 1.3, ensure that it's an Integer in there and not a Long
-      (expect (instance? java.lang.Integer m))
-      (expect (= 99 m))))
-  (it "sets the mnemonic of the action given a character"
+      (is (instance? java.lang.Integer m))
+      (is (= 99 m))))
+  (testing "sets the mnemonic of the action given a character"
     (let [m (.getValue (action :mnemonic \T) Action/MNEMONIC_KEY)]
       ; For Clojure 1.3, ensure that it's an Integer in there and not a Long
-      (expect (instance? java.lang.Integer m))
-      (expect (= (int \T) m))))
-  (it "sets the mnemonic of the action given a lower-case character"
+      (is (instance? java.lang.Integer m))
+      (is (= (int \T) m))))
+  (testing "sets the mnemonic of the action given a lower-case character"
     (let [m (.getValue (action :mnemonic \t) Action/MNEMONIC_KEY)] 
       ; For Clojure 1.3, ensure that it's an Integer in there and not a Long
-      (expect (instance? java.lang.Integer m))
-      (expect (= (int \T) m))))
-  (it "calls the handler when actionPerformed is called"
+      (is (instance? java.lang.Integer m))
+      (is (= (int \T) m))))
+  (testing "calls the handler when actionPerformed is called"
     (let [called (atom false)
           f (fn [e] (reset! called true))
           a (action :handler f)]
       (.actionPerformed a nil)
-      (expect @called)))
-  (it "does nothing when actionPerformed is called and no handler is installed"
+      (is @called)))
+  (testing "does nothing when actionPerformed is called and no handler is installed"
     (let [a (action)]
       (.actionPerformed a nil)
       ; Just making sure no exception was thrown
       true))
-  (it "handles the :key option"
+  (testing "handles the :key option"
     (let [a (action :key "menu T")
           ks (.getValue a Action/ACCELERATOR_KEY)]
-      (expect (not (nil? ks)))
-      (expect (instance? javax.swing.KeyStroke ks))))
-  (it "handles the :enabled? option"
+      (is (not (nil? ks)))
+      (is (instance? javax.swing.KeyStroke ks))))
+  (testing "handles the :enabled? option"
     (not (.isEnabled (action :enabled? false))))
-  (it "handles the :selected? option"
+  (testing "handles the :selected? option"
     (.getValue (action :selected? true) Action/SELECTED_KEY))
 
-  (it "loads resources by convention with :resource option"
+  (testing "loads resources by convention with :resource option"
     (let [a (action :resource ::my-action)]
-      (expect (instance? javax.swing.Icon (config a :icon)))
-      (expect (= (int \X) (config a :mnemonic)))
-      (expect (= "A command" (config a :command)))
-      (expect (= "A name" (config a :name)))
-      (expect (= "A tip" (config a :tip)))
-      (expect (= (keystroke "ctrl C") (config a :key)))))
+      (is (instance? javax.swing.Icon (config a :icon)))
+      (is (= (int \X) (config a :mnemonic)))
+      (is (= "A command" (config a :command)))
+      (is (= "A name" (config a :name)))
+      (is (= "A tip" (config a :tip)))
+      (is (= (keystroke "ctrl C") (config a :key)))))
 
-  (it "loads :icon from a resource"
-    (expect (instance? javax.swing.Icon (config (action :icon ::my-action.icon) :icon))))
-  (it "loads :mnemonic from a resource"
-    (expect (= (int \X) (config (action :mnemonic ::my-action.mnemonic) :mnemonic))))
-  (it "loads :command from a resource"
-    (expect (= "A command" (config (action :command ::my-action.command) :command))))
-  (it "loads :name from a resource"
-    (expect (= "A name" (config (action :name ::my-action.name) :name))))
-  (it "loads :key from a resource"
-    (expect (= (keystroke "ctrl C") (config (action :key ::my-action.key) :key))))
-  (it "loads :tip from a resource"
-    (expect (= "A tip" (config (action :tip ::my-action.tip) :tip)))))
+  (testing "loads :icon from a resource"
+    (is (instance? javax.swing.Icon (config (action :icon ::my-action.icon) :icon))))
+  (testing "loads :mnemonic from a resource"
+    (is (= (int \X) (config (action :mnemonic ::my-action.mnemonic) :mnemonic))))
+  (testing "loads :command from a resource"
+    (is (= "A command" (config (action :command ::my-action.command) :command))))
+  (testing "loads :name from a resource"
+    (is (= "A name" (config (action :name ::my-action.name) :name))))
+  (testing "loads :key from a resource"
+    (is (= (keystroke "ctrl C") (config (action :key ::my-action.key) :key))))
+  (testing "loads :tip from a resource"
+    (is (= "A tip" (config (action :tip ::my-action.tip) :tip)))))
 

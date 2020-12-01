@@ -9,7 +9,8 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns seesaw.test.examples.table
-  (:use [seesaw core table]
+  (:use [seesaw.core]
+        [seesaw.table :exclude [add!]]
         seesaw.test.examples.example))
 
 ; A simple example of (table) for basic tabular data

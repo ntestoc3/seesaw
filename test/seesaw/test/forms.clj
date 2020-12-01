@@ -11,11 +11,11 @@
 (ns seesaw.test.forms
   (:use [seesaw [core :exclude (separator)]])
   (:use seesaw.forms)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe forms-panel
-  (it "Creates a JPanel using a JGoodies form builder"
+(deftest forms-panel-test
+  (testing "Creates a JPanel using a JGoodies form builder"
     (let [p (forms-panel
               "pref,4dlu,80dlu,8dlu,pref,4dlu,80dlu"
               :column-groups [[1 5]]
@@ -32,5 +32,5 @@
                       "R/mm"    (text :columns 10) "D/mm"     (text :columns 10)
                       (separator)]
               :default-dialog-border? true)]
-      (expect (instance? javax.swing.JPanel p)))))
+      (is (instance? javax.swing.JPanel p)))))
 

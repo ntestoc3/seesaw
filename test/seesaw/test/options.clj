@@ -11,59 +11,50 @@
 (ns seesaw.test.options
   (:require [j18n.core :as j18n])
   (:use seesaw.options
-        [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+        clojure.test
+        
+        ))
 
-(describe apply-options
-  (it "throws IllegalArgumentException if properties aren't even"
+(deftest apply-options-test
+  (testing "throws IllegalArgumentException if properties aren't even"
     (try
       (do (apply-options (javax.swing.JPanel.) [1 2 3]) false)
       (catch IllegalArgumentException e true)))
-  (it "throws IllegalArgumentException for an unknown property"
+  (testing "throws IllegalArgumentException for an unknown property"
     (try
       (do (apply-options (javax.swing.JPanel.) [:unknown "unknown"]) false)
       (catch IllegalArgumentException e true)))
-  (it "throws IllegalArgumentException for a property with no setter"
+  (testing "throws IllegalArgumentException for a property with no setter"
     (try
       (do 
         (apply-options (javax.swing.JPanel.) 
                        [:no-setter "no-setter"]) false)
       (catch IllegalArgumentException e true))))
 
-(describe get-option-value
-  (it "throws IllegalArgumentException if target has no handler map"
+(deftest get-option-value-test
+  (testing "throws IllegalArgumentException if target has no handler map"
     (try
       (get-option-value (javax.swing.JPanel.) :text) false
       (catch IllegalArgumentException e true)))
-  (it "throws IllegalArgumentException if option doesn't support getter"
+  (testing "throws IllegalArgumentException if option doesn't support getter"
     (try
       (get-option-value (javax.swing.JPanel.) :text [{:text (default-option :text nil nil)}]) false
       (catch IllegalArgumentException e true)))
-  (it "uses the getter of an option to retrieve a value"
+  (testing "uses the getter of an option to retrieve a value"
     (= "hi" (get-option-value 
               (javax.swing.JPanel.) 
               :text 
               [{:text (default-option :text nil (constantly "hi"))}]))))
 
-;(describe resource-option
-  ;(it "has a setter that applies options using values from resource bundle"
-    ;(let [l  (apply-options (javax.swing.JLabel.) 
-                          ;[:resource ::resource-option] 
-                          ;{:resource (resource-option :resource [:text :name])
-                            ;:text (bean-option :text javax.swing.JLabel)
-                            ;:name (bean-option :name javax.swing.JLabel) })]
-      ;(expect (= "expected text" (.getText l)))
-      ;(expect (= "expected name" (.getName l))))))
-
-(describe around-option
-  (it "calls the provided converter after calling the getter from the wrapped option"
+(deftest around-option-test
+  (testing "calls the provided converter after calling the getter from the wrapped option"
     (= 100 (get-option-value nil 
                              :foo 
                              [{:foo (around-option 
                                      (default-option :foo identity (constantly 99))
                                      identity 
                                      inc)}])))
-  (it "calls the provided converter before calling the setter of the wrapped option"
+  (testing "calls the provided converter before calling the setter of the wrapped option"
     (let [result (atom nil)]
       (set-option-value nil 
                         :bar 
@@ -72,5 +63,5 @@
                                 (default-option :foo #(reset! result %2))
                                 inc
                                 identity)}])
-      (expect (= 101 @result)))))
+      (is (= 101 @result)))))
 

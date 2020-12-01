@@ -10,6 +10,6 @@
 
 (ns seesaw.test.to-widget
   (:use seesaw.to-widget)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 

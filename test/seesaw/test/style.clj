@@ -12,16 +12,15 @@
   (:use seesaw.style
         [seesaw.core :only [border-panel label button config text]]
         [seesaw.color :only [to-color]])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe apply-stylesheet
-
-  (it "returns its input"
+(deftest apply-stylesheet-test
+  (testing "returns its input"
     (let [lbl (label)]
-      (expect (= lbl (apply-stylesheet lbl {})))))
+      (is (= lbl (apply-stylesheet lbl {})))))
 
-  (it "changes styles of widget for rules that match"
+  (testing "changes styles of widget for rules that match"
     (let [lbl (label :id :lbl)
           btn-a (button :class :btn)
           btn-b (button :class :btn :id :btn-b)
@@ -31,8 +30,8 @@
                    :text "hi"}
          [:.btn] { :foreground :red }
          [:#btn-b] {:text "B"}})
-      (expect (= (to-color :aliceblue) (config lbl :background)))
-      (expect (= "hi" (text lbl)))
-      (expect (= "B" (text btn-b)))
-      (expect (= (to-color :red) (config btn-a :foreground)))
-      (expect (= (to-color :red) (config btn-b :foreground))))))
+      (is (= (to-color :aliceblue) (config lbl :background)))
+      (is (= "hi" (text lbl)))
+      (is (= "B" (text btn-b)))
+      (is (= (to-color :red) (config btn-a :foreground)))
+      (is (= (to-color :red) (config btn-b :foreground))))))

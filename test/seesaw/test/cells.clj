@@ -9,14 +9,13 @@
 ;   You must not remove this notice, or any other, from this software.
 
 (ns seesaw.test.cells
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]
+  (:use clojure.test
         [seesaw.core]
         [seesaw.cells]
         [seesaw.font]))
 
-(describe default-list-cell-renderer
-  (it "proxies a DefaultListCellRenderer which dispatches to a function"
+(deftest default-list-cell-renderer-test
+  (testing "proxies a DefaultListCellRenderer which dispatches to a function"
     (let [expected-font (font :name "ARIAL-BOLD-18")
           jlist (javax.swing.JList.)
           render-fn (fn [renderer info] 
@@ -26,13 +25,13 @@
                                        :font expected-font))
           r (default-list-cell-renderer render-fn)
           c (.getListCellRendererComponent r jlist nil 0 false false)]
-      (expect (= java.awt.Color/YELLOW (.getForeground c)))
-      (expect (= "hi" (.getText c)))
-      (expect (= nil (.getIcon c)))
-      (expect (= expected-font (.getFont c))))))
+      (is (= java.awt.Color/YELLOW (.getForeground c)))
+      (is (= "hi" (.getText c)))
+      (is (= nil (.getIcon c)))
+      (is (= expected-font (.getFont c))))))
 
-(describe default-tree-cell-renderer
-  (it "proxies a DefaultTreeCellRenderer which dispatches to a function"
+(deftest default-tree-cell-renderer-test
+  (testing "proxies a DefaultTreeCellRenderer which dispatches to a function"
     (let [expected-font (font :name "ARIAL-BOLD-18")
           jtree (javax.swing.JTree.)
           render-fn (fn [renderer info] 
@@ -42,21 +41,21 @@
                                        :font expected-font))
           r (default-tree-cell-renderer render-fn)
           c (.getTreeCellRendererComponent r jtree 0 false false false 0 false)]
-      (expect (= java.awt.Color/YELLOW (.getForeground c)))
-      (expect (= "hi" (.getText c)))
-      (expect (= nil (.getIcon c)))
-      (expect (= expected-font (.getFont c))))))
+      (is (= java.awt.Color/YELLOW (.getForeground c)))
+      (is (= "hi" (.getText c)))
+      (is (= nil (.getIcon c)))
+      (is (= expected-font (.getFont c))))))
 
-(describe to-cell-renderer
-  (it "throws an exception if it can't make a renderer for a component"
+(deftest to-cell-renderer-test
+  (testing "throws an exception if it can't make a renderer for a component"
     (try
       (to-cell-renderer (javax.swing.JLabel.) nil) false
       (catch IllegalArgumentException e true)))
-  (it "creates a tree cell renderer for a JTree"
+  (testing "creates a tree cell renderer for a JTree"
     (instance? javax.swing.tree.TreeCellRenderer (to-cell-renderer (javax.swing.JTree.) (fn [r i]))))
-  (it "creates a list cell renderer for a JList"
+  (testing "creates a list cell renderer for a JList"
     (instance? javax.swing.ListCellRenderer (to-cell-renderer (javax.swing.JList.) (fn [r i]))))
-  (it "creates a list cell renderer for a JComboBox"
+  (testing "creates a list cell renderer for a JComboBox"
     (instance? javax.swing.ListCellRenderer (to-cell-renderer (javax.swing.JComboBox.) (fn [r i])))))
 
 

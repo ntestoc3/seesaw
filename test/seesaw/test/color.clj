@@ -10,55 +10,55 @@
 
 (ns seesaw.test.color
   (:use seesaw.color)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)])
+  (:use clojure.test
+        )
   (:import [java.awt Color]))
 
-(describe get-rgba
-  (it "returns vector [r g b a] as integers"
+(deftest get-rgba-test
+  (testing "returns vector [r g b a] as integers"
     (= [1 2 3 4] (get-rgba (color 1 2 3 4)))))
 
-(describe color
-  (it "can create a color from rgb integers"
+(deftest color-test
+  (testing "can create a color from rgb integers"
     (let [c (color 1 2 3)]
-      (expect (= (Color. 1 2 3) c))))
-  (it "can create a color from rgba integers"
+      (is (= (Color. 1 2 3) c))))
+  (testing "can create a color from rgba integers"
     (let [c (color 1 2 3 4)]
-      (expect (= (Color. 1 2 3 4) c))))
-  (it "can create a color from a #-prefixed 6-digit rgb hex string"
+      (is (= (Color. 1 2 3 4) c))))
+  (testing "can create a color from a #-prefixed 6-digit rgb hex string"
     (let [c (color "#010203")]
-      (expect (= (Color. 1 2 3) c))))
-  (it "can create a color from a #-prefixed 3-digit rgb hex string"
+      (is (= (Color. 1 2 3) c))))
+  (testing "can create a color from a #-prefixed 3-digit rgb hex string"
     (let [c (color "#fed")]
-      (expect (= (Color. 0xff 0xee 0xdd) c))))
-  (it "can create a color from a #-prefixed rgb hex keyword"
+      (is (= (Color. 0xff 0xee 0xdd) c))))
+  (testing "can create a color from a #-prefixed rgb hex keyword"
     (let [c (color :#010203)]
-      (expect (= (Color. 1 2 3) c))))
-  (it "can create a color from a #-prefixed rgb hex string and alpha"
+      (is (= (Color. 1 2 3) c))))
+  (testing "can create a color from a #-prefixed rgb hex string and alpha"
     (let [c (color "#010203" 23)]
-      (expect (= (Color. 1 2 3 23) c))))
-  (it "can create a color from a #-prefixed rgb hex keyword and alpha"
+      (is (= (Color. 1 2 3 23) c))))
+  (testing "can create a color from a #-prefixed rgb hex keyword and alpha"
     (let [c (color :#010203 23)]
-      (expect (= (Color. 1 2 3 23) c))))
-  (it "can create a color from a CSS-style name"
-    (expect (= (Color. 240 248 255) (color "aliceblue"))))
-  (it "can create a color from a CSS-style keyword name"
-    (expect (= (Color. 0 255 127) (color :springgreen))))
-  (it "can create a color from a mixed-case CSS-style name"
-    (expect (= (Color. 240 248 255) (color "AlIceBlUe")))))
+      (is (= (Color. 1 2 3 23) c))))
+  (testing "can create a color from a CSS-style name"
+    (is (= (Color. 240 248 255) (color "aliceblue"))))
+  (testing "can create a color from a CSS-style keyword name"
+    (is (= (Color. 0 255 127) (color :springgreen))))
+  (testing "can create a color from a mixed-case CSS-style name"
+    (is (= (Color. 240 248 255) (color "AlIceBlUe")))))
 
-(describe to-color
-  (it "returns nil for nil input"
+(deftest to-color-test
+  (testing "returns nil for nil input"
     (nil? (to-color nil)))
-  (it "returns its input if its a color"
-      (expect (= Color/BLACK (to-color Color/BLACK)))))
+  (testing "returns its input if its a color"
+      (is (= Color/BLACK (to-color Color/BLACK)))))
 
-(describe default-color
-  (it "retrieve a default color from the UIManager"
+(deftest default-color-test
+  (testing "retrieve a default color from the UIManager"
     (let [name "Label.foreground"
           c (default-color name)
           expected (.getColor (javax.swing.UIManager/getDefaults) name)]
-      (expect (not (nil? c)))
-      (expect (= c expected)))))
+      (is (not (nil? c)))
+      (is (= c expected)))))
 
 

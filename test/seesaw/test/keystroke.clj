@@ -10,31 +10,31 @@
 
 (ns seesaw.test.keystroke
   (:use seesaw.keystroke)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)])
+  (:use clojure.test
+        )
   (:import [javax.swing KeyStroke]
            [java.awt Toolkit]))
 
-(describe keystroke
-  (it "creates a keystroke from a descriptor string"
+(deftest keystroke-test
+  (testing "creates a keystroke from a descriptor string"
     (let [ks (keystroke "ctrl S")]
-      (expect (= KeyStroke (class ks)))
-      (expect (= java.awt.event.KeyEvent/VK_S (.getKeyCode ks))))))
+      (is (= KeyStroke (class ks)))
+      (is (= java.awt.event.KeyEvent/VK_S (.getKeyCode ks))))))
 
-(describe keystroke
-  (it "returns nil for nil input"
+(deftest keystroke-test
+  (testing "returns nil for nil input"
     (nil? (keystroke nil)))
-  (it "returns input if it's a KeyStroke"
+  (testing "returns input if it's a KeyStroke"
     (let [ks (KeyStroke/getKeyStroke "alt X")]
-      (expect (= ks (keystroke ks)))))
-  (it "returns a keystroke for a string"
+      (is (= ks (keystroke ks)))))
+  (testing "returns a keystroke for a string"
     (let [ks (keystroke "alt X")]
-      (expect (= java.awt.event.KeyEvent/VK_X (.getKeyCode ks)))))
-  (it "substitute platform-specific menu modifier for \"menu\" modifier"
+      (is (= java.awt.event.KeyEvent/VK_X (.getKeyCode ks)))))
+  (testing "substitute platform-specific menu modifier for \"menu\" modifier"
     (let [ks (keystroke "menu X")]
-      (expect (= java.awt.event.KeyEvent/VK_X (.getKeyCode ks)))
-      (expect (= (.. (Toolkit/getDefaultToolkit) getMenuShortcutKeyMask) (bit-and 7 (.getModifiers ks))))))
-  (it "returns a keystroke for a char"
+      (is (= java.awt.event.KeyEvent/VK_X (.getKeyCode ks)))
+      (is (= (.. (Toolkit/getDefaultToolkit) getMenuShortcutKeyMask) (bit-and 7 (.getModifiers ks))))))
+  (testing "returns a keystroke for a char"
     (let [ks (keystroke \A)]
-      (expect (= \A (.getKeyChar ks))))))
+      (is (= \A (.getKeyChar ks))))))
 

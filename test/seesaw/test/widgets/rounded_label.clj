@@ -10,14 +10,14 @@
 
 (ns seesaw.test.widgets.rounded-label
   (:use [seesaw.widgets.rounded-label])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe rounded-label
-  (it "creates a sub-class of label"
+(deftest rounded-label-test
+  (testing "creates a sub-class of label"
     (instance? javax.swing.JLabel (rounded-label)))
-  (it "honors label options"
+  (testing "honors label options"
     (let [rl (rounded-label :text "hi" :background :blue)]
-      (expect (= "hi" (.getText rl)))
-      (expect (= java.awt.Color/BLUE (.getBackground rl))))))
+      (is (= "hi" (.getText rl)))
+      (is (= java.awt.Color/BLUE (.getBackground rl))))))
 

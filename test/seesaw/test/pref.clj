@@ -10,20 +10,20 @@
 
 (ns seesaw.test.pref
   (:use seesaw.pref)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe preference-atom
-  (it "should return an atom with nil as its default value"
+(deftest preference-atom-test
+  (testing "should return an atom with nil as its default value"
     (do (.remove (preferences-node) (pr-str "key"))
      (let [atom (preference-atom "key")]
-       (expect (nil? @atom)))))
-  (it "should return an atom with the specified default value"
+       (is (nil? @atom)))))
+  (testing "should return an atom with the specified default value"
     (do (.remove (preferences-node) (pr-str "key"))
         (let [atom (preference-atom "key" 'some-value)]
-          (expect (= @atom 'some-value)))))
-  (it "should keep pref in sync with atom"
+          (is (= @atom 'some-value)))))
+  (testing "should keep pref in sync with atom"
     (do (.remove (preferences-node) (pr-str "key"))
         (let [atom (preference-atom "key")]
           (reset! atom 'new-value)
-          (expect (= (read-string (.get (preferences-node) (pr-str "key") "nil")) 'new-value))))))
+          (is (= (read-string (.get (preferences-node) (pr-str "key") "nil")) 'new-value))))))

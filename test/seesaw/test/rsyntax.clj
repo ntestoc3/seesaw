@@ -11,12 +11,12 @@
 (ns seesaw.test.rsyntax
   (:require [seesaw.rsyntax :as rsyntax]
             [seesaw.core :as core])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe text-area
-  (it "creates a text area"
+(deftest text-area-test
+  (testing "creates a text area"
     (let [ta (rsyntax/text-area :syntax :clojure)]
-      (expect (instance? org.fife.ui.rsyntaxtextarea.RSyntaxTextArea ta))
-      (expect (= "text/clojure" (core/config ta :syntax))))))
+      (is (instance? org.fife.ui.rsyntaxtextarea.RSyntaxTextArea ta))
+      (is (= "text/clojure" (core/config ta :syntax))))))
 

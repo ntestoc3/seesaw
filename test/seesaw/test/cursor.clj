@@ -11,32 +11,32 @@
 (ns seesaw.test.cursor
   (:use seesaw.cursor)
   (:use seesaw.graphics)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)])
+  (:use clojure.test
+        )
   (:import [java.awt Cursor]))
 
 (defmacro test-built-ins []
   `(testing "creating a built-in cursor"
     ~@(for [[key value] (dissoc @#'seesaw.cursor/built-in-cursor-map :custom)]
-        `(it ~(str "should create a " key " cursor")
-          (expect (= ~value (-> (cursor ~key) (.getType))))))))
+        `(testing ~(str "should create a " key " cursor")
+          (is (= ~value (-> (cursor ~key) (.getType))))))))
 
-(describe cursor
+(deftest cursor-test
   (test-built-ins)
-  (it "should return its input if given a cursor"
+  (testing "should return its input if given a cursor"
     (let [c (cursor :hand)]
-      (expect (= c (cursor c)))))
-  (it "should create a custom cursor from an image with hotspot (0, 0)"
+      (is (= c (cursor c)))))
+  (testing "should create a custom cursor from an image with hotspot (0, 0)"
     (let [img (buffered-image 16 16)
           cur (cursor img)]
       ; Can't actually test that the image was set
       (= (Cursor/CUSTOM_CURSOR) (.getType cur))))
-  (it "should create a custom cursor from an image with an [x y] hotspot"
+  (testing "should create a custom cursor from an image with an [x y] hotspot"
     (let [img (buffered-image 16 16)
           cur (cursor img [5 5])]
       ; Can't actually test that the hotspot was set
       (= (Cursor/CUSTOM_CURSOR) (.getType cur))))
-  (it "should create a custom cursor from an icon with an [x y] hotspot"
+  (testing "should create a custom cursor from an icon with an [x y] hotspot"
     (let [icon (javax.swing.ImageIcon. (buffered-image 16 16))
           cur (cursor icon [5 5])]
       ; Can't actually test that the hotspot was set

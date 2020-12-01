@@ -10,10 +10,10 @@
 
 (ns seesaw.test.chooser
   (:use seesaw.chooser)
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe file-filter
-  (it "should create a FileFilter"
+(deftest file-filter-test
+  (testing "should create a FileFilter"
     (instance? javax.swing.filechooser.FileFilter
                (file-filter "All files" (constantly true)))))

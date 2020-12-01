@@ -10,8 +10,8 @@
 
 (ns seesaw.test.config
   (:use [seesaw.config :only [config config!]])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
 ; Pretty much tested in core
 

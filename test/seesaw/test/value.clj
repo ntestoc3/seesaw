@@ -11,66 +11,66 @@
 (ns seesaw.test.value
   (:use [seesaw.value]
         [seesaw.core])
-  (:use [lazytest.describe :only (describe it testing)]
-        [lazytest.expect :only (expect)]))
+  (:use clojure.test
+        ))
 
-(describe value*
-  (it "returns a map keyed by id for containers"
+(deftest value*-test
+  (testing "returns a map keyed by id for containers"
     (let [a (label :id :a :text "A")
           b (text  :id :b :text "B")
           p (horizontal-panel :items [a
                                       (vertical-panel :id :foo :items [b]) ])
           f (frame :content p)]
-      (expect (= {:a "A" :b "B"}
+      (is (= {:a "A" :b "B"}
                  (value* f)))))
 
-  (it "returns the value of a progress bar"
+  (testing "returns the value of a progress bar"
     (= 99 (value* (progress-bar :min 0 :max 100 :value 99))))
 
-  (it "returns the value of a slider"
+  (testing "returns the value of a slider"
     (= 99 (value* (slider :min 0 :max 100 :value 99))))
 
-  (it "returns the selection of a spinner"
+  (testing "returns the selection of a spinner"
     (= 101 (value* (selection! (spinner :model [99 100 101 102]) 101))))
 
-  (it "returns the selection of a button-y thing (checkbox, button, menu, etc)"
-    (expect (value* (button :selected? true)))
-    (expect (nil? (value* (button :selected? false)))))
+  (testing "returns the selection of a button-y thing (checkbox, button, menu, etc)"
+    (is (value* (button :selected? true)))
+    (is (false? (value* (button :selected? false)))))
 
-  (it "returns the selection of a listbox"
+  (testing "returns the selection of a listbox"
     (let [cb (listbox :model ["a" "b" "c"])]
       (selection! cb "b")
-      (expect (= "b" (value* cb)))))
+      (is (= "b" (value* cb)))))
 
-  (it "returns the selection of a combobox"
+  (testing "returns the selection of a combobox"
     (let [cb (combobox :model ["a" "b" "c"])]
       (selection! cb "c")
-      (expect (= "c" (value* cb)))))
+      (is (= "c" (value* cb)))))
 
-  (it "returns the selection of button-group"
+  (testing "returns the selection of button-group"
     (let [a (radio)
           b (radio)
           g (button-group :buttons [a b])]
       (selection! g b)
-      (expect (= b (value* g)))))
+      (is (= b (value* g)))))
 
-  (it "returns the text of a label"
+  (testing "returns the text of a label"
     (= "bye" (value* (javax.swing.JLabel. "bye"))))
 
-  (it "returns the text of an editor pane"
+  (testing "returns the text of an editor pane"
     (= "bye" (value* (editor-pane :text "bye"))))
 
-  (it "returns the text of styled-text"
+  (testing "returns the text of styled-text"
     (= "bye" (value* (styled-text :text "bye"))))
 
-  (it "returns the text of a text area"
+  (testing "returns the text of a text area"
     (= "bye" (value* (javax.swing.JTextArea. "bye"))))
 
-  (it "returns the text of a text field"
+  (testing "returns the text of a text field"
     (= "hi" (value* (javax.swing.JTextField. "hi")))))
 
-(describe value!*
-  (it "sets the values of widgets with a map keyed by id for containers"
+(deftest value!*-test
+  (testing "sets the values of widgets with a map keyed by id for containers"
     (let [a (label :id :a :text "")
           b (text  :id :b :text "")
           c (text :id :c :text "unchanged")
@@ -78,60 +78,60 @@
           p (horizontal-panel :items [a
                                       (vertical-panel :id :foo :items [b c d]) ])
           f (frame :content p)]
-      (expect (= f (value!* f {:a "A" :b "B" :d nil})))
-      (expect (= {:a "A" :b "B" :c "unchanged" :d ""} (value* f)))))
+      (is (= f (value!* f {:a "A" :b "B" :d nil})))
+      (is (= {:a "A" :b "B" :c "unchanged" :d ""} (value* f)))))
 
-  (it "sets the value of a progress-bar"
+  (testing "sets the value of a progress-bar"
     (= 99 (-> (progress-bar :min 0 :max 100 :value 98)
             (value!* 99)
             value*)))
 
-  (it "sets the value of a slider"
+  (testing "sets the value of a slider"
     (= 99 (-> (slider :min 0 :max 100 :value 98)
             (value!* 99)
             value*)))
 
-  (it "sets the selection of a spinner"
+  (testing "sets the selection of a spinner"
     (= 101 (-> (spinner :model [99 100 101 102])
              (value!* 101)
              value)))
 
-  (it "sets the selection of a button-y thing (checkbox, button, menu, etc)"
-    (expect (not (-> (button :selected? true)
+  (testing "sets the selection of a button-y thing (checkbox, button, menu, etc)"
+    (is (not (-> (button :selected? true)
               (value!* false)
               value*)))
-    (expect (-> (button :selected? false)
+    (is (-> (button :selected? false)
               (value!* true)
               value*)))
 
-  (it "sets the selection of a listbox"
+  (testing "sets the selection of a listbox"
     (let [cb (listbox :model ["a" "b" "c"])]
-      (expect (nil? (value* cb)))
+      (is (nil? (value* cb)))
       (value!* cb "b")
-      (expect (= "b" (value* cb)))))
+      (is (= "b" (value* cb)))))
 
-  (it "sets the selection of a combobox"
+  (testing "sets the selection of a combobox"
     (let [cb (combobox :model ["a" "b" "c"])]
-      (expect (= "a" (selection cb)))
+      (is (= "a" (selection cb)))
       (value!* cb "c")
-      (expect (= "c" (value* cb)))))
-  (it "sets the selection of button-group"
+      (is (= "c" (value* cb)))))
+  (testing "sets the selection of button-group"
     (let [a (radio)
           b (radio)
           g (button-group :buttons [a b])]
-      (expect (nil? (selection g)))
+      (is (nil? (selection g)))
       (value!* g b)
-      (expect (= b (value* g)))))
-  (it "sets the text of an editor-pane"
+      (is (= b (value* g)))))
+  (testing "sets the text of an editor-pane"
     (= "bar" (-> (editor-pane) (value!* "bar") text)))
-  (it "sets the text of a styled-text"
+  (testing "sets the text of a styled-text"
     (= "bar" (-> (styled-text) (value!* "bar") text)))
-  (it "sets the text of a text area"
+  (testing "sets the text of a text area"
     (= "bar" (-> (text :multi-line? true) (value!* "bar") text)))
-  (it "sets the text of a text field"
+  (testing "sets the text of a text field"
     (= "bar" (-> (text) (value!* "bar") text)))
-  (it "sets the text of a text field to \"\" if value is nil"
+  (testing "sets the text of a text field to \"\" if value is nil"
     (= "" (-> (text "foo") (value!* nil) text)))
-  (it "sets the text of a label"
+  (testing "sets the text of a label"
     (= "bar" (-> (label) (value!* "bar") text))))
 
